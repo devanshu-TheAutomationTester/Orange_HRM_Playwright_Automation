@@ -1,0 +1,22 @@
+[
+  {
+    "key": "qa-engineer-permanent",
+    "middleName": "",
+    "employeeIdPrefix": "QA",
+    "profilePicture": "test-data/images/profile-1.png",
+    "update": {
+      "jobTitle": "QA Engineer",
+      "employmentStatus": "Full-Time Permanent"
+    }
+  },
+  {
+    "key": "software-engineer-probation",
+    "middleName": "",
+    "employeeIdPrefix": "SE",
+    "profilePicture": "test-data/images/profile-2.png",
+    "update": {
+      "jobTitle": "Software Engineer",
+      "employmentStatus": "Full-Time Probation"
+    }
+  }
+]

@@ -1,0 +1,10 @@
+node_modules/
+.env
+
+# Raw run output (regenerated on every run)
+test-results/
+playwright-report/
+blob-report/
+
+# Curated copy of the latest run (HTML report + videos) IS committed - see README
+!test-artifacts/

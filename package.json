@@ -1,0 +1,30 @@
+{
+  "name": "orangehrm-playwright-automation",
+  "version": "1.0.0",
+  "description": "End-to-end Employee Lifecycle automation for the OrangeHRM demo site using Playwright Test (UI + API cross-checks)",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:lifecycle": "playwright test tests/employeeLifecycle.spec.js",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:debug": "playwright test --debug",
+    "report": "playwright show-report",
+    "artifacts:collect": "node scripts/collect-artifacts.js",
+    "clean:artifacts": "node scripts/clean-artifacts.js"
+  },
+  "keywords": [
+    "playwright",
+    "orangehrm",
+    "e2e",
+    "qa-automation"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "dotenv": "^18.0.5"
+  }
+}
