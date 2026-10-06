@@ -1,0 +1,166 @@
+name: OrangeHRM E2E (Playwright)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment (config/environments/<name>.js)
+        type: choice
+        options: [demo, qa, staging]
+        default: demo
+      grep:
+        description: Only run tests matching this tag/title, e.g. @smoke (empty = all)
+        required: false
+        default: ''
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TEST_ENV: ${{ inputs.environment || 'demo' }}
+
+jobs:
+  static-checks:
+    name: Lint, format, types
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+      - name: Every spec loads and every fixture resolves
+        run: npx playwright test --list
+
+  e2e:
+    name: E2E shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+    needs: static-checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # GitHub environment (demo / qa / staging) holds the secrets and variables for that target.
+    environment: ${{ inputs.environment || 'demo' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2, 3]
+        shardTotal: [3]
+    env:
+      CI: 'true'
+      # Optional per-environment URL override (GitHub environment variable); config/environments/*.js is the default.
+      BASE_URL: ${{ vars.BASE_URL }}
+      QA_BASE_URL: ${{ vars.QA_BASE_URL }}
+      STAGING_BASE_URL: ${{ vars.STAGING_BASE_URL }}
+      # Credentials come from secrets only - no fallback values in the workflow.
+      ORANGEHRM_USERNAME: ${{ secrets.ORANGEHRM_USERNAME }}
+      ORANGEHRM_PASSWORD: ${{ secrets.ORANGEHRM_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Check credentials are configured
+        run: |
+          if [ -z "$ORANGEHRM_USERNAME" ] || [ -z "$ORANGEHRM_PASSWORD" ]; then
+            echo "::error::Set the ORANGEHRM_USERNAME and ORANGEHRM_PASSWORD secrets for environment '$TEST_ENV'"
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run tests (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
+        run: npx playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} ${{ inputs.grep && format('--grep "{0}"', inputs.grep) || '' }}
+
+      - name: Upload blob report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-${{ matrix.shardIndex }}
+          path: blob-report/
+          retention-days: 7
+
+      - name: Upload videos, traces and screenshots of failures
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.shardIndex }}
+          path: test-results/
+          retention-days: 14
+
+  report:
+    name: Merge reports
+    needs: e2e
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - name: Download blob reports from all shards
+        uses: actions/download-artifact@v4
+        with:
+          path: all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+
+      - name: Merge into one HTML + JSON report
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: results.json
+        run: npx playwright merge-reports --reporter html,json ./all-blob-reports
+
+      - name: Job summary (pass / fail / flaky)
+        run: node scripts/report-summary.js results.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload merged HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: playwright-report/
+
+  deploy-report:
+    name: Publish report to GitHub Pages
+    needs: report
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' && needs.report.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

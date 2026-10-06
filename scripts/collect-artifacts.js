@@ -1,5 +1,5 @@
 // Copies the latest Playwright HTML report and the test videos into ./test-artifacts
-// so they can be committed to the repository as evidence of the test run.
+// so a clean run can be committed to the repository as evidence.
 const fs = require('fs');
 const path = require('path');
 

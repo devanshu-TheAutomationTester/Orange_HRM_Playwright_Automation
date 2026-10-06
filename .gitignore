@@ -1,10 +1,15 @@
 node_modules/
 .env
+.env.*
+!.env.example
 
-# Raw run output (regenerated on every run)
+# Saved login sessions (storageState) - contain session cookies
+.auth/
+
+# Run output (regenerated on every run; CI publishes the merged report to GitHub Pages)
 test-results/
 playwright-report/
 blob-report/
-
-# Curated copy of the latest run (HTML report + videos) IS committed - see README
-!test-artifacts/
+all-blob-reports/
+results.json
+test-artifacts/
