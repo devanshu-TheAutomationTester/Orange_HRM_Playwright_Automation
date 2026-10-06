@@ -3,7 +3,7 @@ const { expect } = require('@playwright/test');
 const { BasePage } = require('./BasePage');
 const { MESSAGES, ROUTES, TIMEOUTS, URL_PATTERNS } = require('../config/constants');
 
-// Employee profile: name header, profile picture and the Job tab. 
+// Employee profile: name header, profile picture and the Job tab.
 class EmployeeDetailsPage extends BasePage {
   /** @param {import('@playwright/test').Page} page */
   constructor(page) {
@@ -59,7 +59,7 @@ class EmployeeDetailsPage extends BasePage {
     await this.oxd.waitForPageReady();
   }
 
-  // Reloads the Job tab and asserts the saved values are shown. @param {{ jobTitle: string, employmentStatus: string }} job 
+  // Reloads the Job tab and asserts the saved values are shown. @param {{ jobTitle: string, employmentStatus: string }} job
   async expectPersistedJobDetails({ jobTitle, employmentStatus }) {
     await this.page.reload();
     await this.waitForJobDetails();

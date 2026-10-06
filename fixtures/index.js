@@ -42,6 +42,36 @@ const {
 const AUTH_DIR = path.join(ROOT, '.auth');
 const APP_ROOT = `${env.baseURL}/`;
 
+/**
+ * @typedef {import('../utils/testData').EmployeeRow} EmployeeRow
+ * @typedef {import('../utils/testData').EmployeeData} EmployeeData
+ * @typedef {EmployeeData & { empNumber: number }} SeededEmployee
+ * @typedef {{ jobTitle: string, employmentStatus: string, jobTitleId: number, empStatusId: number }} JobReference
+ * @typedef {{ username: string, password: string, id: number, employee: SeededEmployee }} EssUser
+ *
+ * @typedef {{
+ *   employeeRow: EmployeeRow,
+ *   logger: Logger,
+ *   apiClient: OrangeHrmApi,
+ *   employeeData: EmployeeData,
+ *   employeeCleanup: { track: (employeeId: string) => void },
+ *   employee: SeededEmployee,
+ *   jobReference: JobReference,
+ *   employeeWithJob: SeededEmployee & { job: JobReference },
+ *   essUser: EssUser,
+ *   loginPage: LoginPage,
+ *   dashboardPage: DashboardPage,
+ *   nav: NavigationBar,
+ *   addEmployeePage: AddEmployeePage,
+ *   employeeListPage: EmployeeListPage,
+ *   employeeDetailsPage: EmployeeDetailsPage,
+ * }} TestFixtures
+ *
+ * @typedef {{
+ *   adminStorageState: string,
+ *   adminRequest: import('@playwright/test').APIRequestContext,
+ * }} WorkerFixtures
+ */
 
 async function seedEmployee(api, cleanup, data) {
   cleanup.track(data.employeeId);
@@ -204,7 +234,7 @@ const test = base.test.extend(
 
 const expect = base.expect.extend(matchers);
 
-// For tests that must start logged out (they exercise the login form themselves). 
+// For tests that must start logged out (they exercise the login form themselves).
 const LOGGED_OUT = Object.freeze({ cookies: [], origins: [] });
 
 module.exports = { test, expect, LOGGED_OUT };

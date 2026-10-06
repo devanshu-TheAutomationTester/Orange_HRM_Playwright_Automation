@@ -6,7 +6,7 @@ const { OxdComponents } = require('./components/OxdComponents');
  * Page objects are created per test by fixtures (fixtures/index.js) - specs never call `new`.
  */
 class BasePage {
-  // @param {import('@playwright/test').Page} page 
+  // @param {import('@playwright/test').Page} page
   constructor(page) {
     this.page = page;
     this.oxd = new OxdComponents(page);

@@ -5,7 +5,7 @@ const { MESSAGES, TIMEOUTS, URL_PATTERNS } = require('../config/constants');
 
 // PIM > Add Employee //
 class AddEmployeePage extends BasePage {
-  // @param {import('@playwright/test').Page} page 
+  // @param {import('@playwright/test').Page} page
   constructor(page) {
     super(page);
     this.heading = page.getByRole('heading', { name: 'Add Employee', exact: true });
@@ -26,7 +26,6 @@ class AddEmployeePage extends BasePage {
     await this.oxd.waitForPageReady();
   }
 
-  
   async fillEmployeeId(employeeId) {
     await expect(async () => {
       await this.employeeId.fill(employeeId);
@@ -34,7 +33,6 @@ class AddEmployeePage extends BasePage {
     }, 'Employee Id field should keep the test id').toPass({ timeout: TIMEOUTS.pageReady });
   }
 
-  
   async fillForm(employee) {
     await this.firstName.fill(employee.firstName);
     if (employee.middleName) await this.middleName.fill(employee.middleName);
@@ -43,7 +41,7 @@ class AddEmployeePage extends BasePage {
     if (employee.profilePicturePath) await this.uploadProfilePicture(employee.profilePicturePath);
   }
 
-  // @param {string} filePath absolute path 
+  // @param {string} filePath absolute path
   async uploadProfilePicture(filePath) {
     await this.photoInput.setInputFiles(filePath);
     await expect(this.photoPreview, 'Profile picture preview should show the uploaded image').toHaveAttribute(
@@ -52,7 +50,6 @@ class AddEmployeePage extends BasePage {
     );
   }
 
- 
   async createEmployee(employee) {
     await this.waitForForm();
     await this.fillForm(employee);
